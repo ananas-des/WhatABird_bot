@@ -35,7 +35,7 @@ API_TOKEN = os.environ["BOT_TOKEN"]
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=API_TOKEN, parse_mode="Markdown")
+bot = Bot(token=API_TOKEN, parse_mode="MarkdownV2")
 dp = Dispatcher(bot)
 
 _logger = logging.getLogger(__name__)
@@ -51,8 +51,8 @@ for i, child in enumerate(model_resnet.children()):
             param.requires_grad = False
 
 model_resnet.fc = nn.Sequential(nn.Linear(2048, 525))
-model_resnet.load_state_dict(torch.load("birds/model_weights_50_best.pth"))
-label_encoder = pickle.load(open("label_encoder.pkl", 'rb'))
+model_resnet.load_state_dict(torch.load("model/model_weights_50_best.pth", map_location=torch.device(DEVICE)))
+label_encoder = pickle.load(open("model/label_encoder.pkl", 'rb'))
 
 
 @dp.message_handler(commands=["start", "help"])
@@ -62,14 +62,9 @@ async def send_welcome(message: types.Message):
         "Send me picture with a bird or a link. And I will try to find out What A Bird is in your picture. "
         "It's my job, you know.", parse_mode=ParseMode.MARKDOWN
     )
-
-
-@dp.message_handler(commands=["hi", "hello"])
-async def echo(message: types.Message):
     kb = [
         [
-            types.KeyboardButton(text="Image \U0001F4F7"),
-            types.KeyboardButton(text="Link \U0001F310")
+            types.KeyboardButton(text="Yes!")
         ],
     ]
     keyboard = types.ReplyKeyboardMarkup(
@@ -77,26 +72,68 @@ async def echo(message: types.Message):
         resize_keyboard=True,
         one_time_keyboard=True
     )
-    await message.answer("What do you have? Image or link?", reply_markup=keyboard)
+    await message.answer("Do you want to start?", reply_markup=keyboard)
     buttons_answer(message)
     
 
 @dp.message_handler(content_types=['text'])
 async def buttons_answer(message):
-    if message.text == "Image \U0001F4F7":
-        await message.reply("Cool! I'm waiting for your image \U0001F51C")
+    if message.text == "Yes!":
+        kb = [
+            [
+                types.KeyboardButton(text="Image \U0001F4F7"),
+                types.KeyboardButton(text="Link \U0001F310")
+            ],
+        ]
+        keyboard = types.ReplyKeyboardMarkup(
+            keyboard=kb,
+            resize_keyboard=True,
+            one_time_keyboard=True
+        )
+        await message.answer("What do you have? Image or link?", reply_markup=keyboard)
+        buttons_answer(message)
+    elif message.text == "Image \U0001F4F7":
+        await message.reply("Cool\! I'm waiting for your image \U0001F51C")
     elif message.text == "Link \U0001F310":
-        await message.reply("Link, of course! Make sure you copied the correct link \U0001F517")
+        await message.reply("Link, of course\! Make sure you copied the correct link \U0001F517")
     elif message.text.startswith("http"):
         try:
             response = requests.get(message.text).content
             image = Image.open(io.BytesIO(response)).convert("RGB")
-            await message.reply("Got it! Starting downloading and processing your bird image \U0001F4E0")
+            await message.reply("Got it\! Starting downloading and processing your bird image \U0001F4E0")
             bird, image_return = predict_image(model_resnet, image)
             await message.reply(f"I think your bird is:\n\n{bird} \U0001F425")
             await message.answer_photo(image_return)
+            
+            kb = [
+                [
+                types.KeyboardButton(text="Yes!")
+                ],
+            ]
+            keyboard = types.ReplyKeyboardMarkup(
+                keyboard=kb,
+                resize_keyboard=True,
+                one_time_keyboard=True
+            )
+            await message.answer("Want to try again?", reply_markup=keyboard)
+            buttons_answer(message)
         except:
-            await message.reply(text=f"Your link is invalid \U0001F4DB")
+            await message.reply(text=f"Your link is invalid \U0001F4DB Can you repeat, please?")
+            
+    else:
+        await message.reply(text=f"Sorry, I don't understand \U0001F614")
+        kb = [
+            [
+            types.KeyboardButton(text="Yes!")
+            ],
+        ]
+        keyboard = types.ReplyKeyboardMarkup(
+            keyboard=kb,
+            resize_keyboard=True,
+            one_time_keyboard=True
+        )
+        await message.answer("Want to try again?", reply_markup=keyboard)
+        buttons_answer(message)
             
             
 @dp.message_handler(content_types=[types.ContentType.PHOTO])
@@ -109,7 +146,7 @@ async def echo_image(message: types.Message):
 
         # Reply with the photo and caption
         await message.answer(
-            text="Got it! I have recieved your image and started to find keys in my Birds photo album \U0001F4DA"
+            text="Got it\! I have recieved your image and started to find keys in my Birds photo album \U0001F4DA"
         )
         # Perform bird prediction
         bird, image_return = predict_image(model_resnet, photo)
@@ -117,6 +154,18 @@ async def echo_image(message: types.Message):
         # Reply with the bird prediction
         await message.reply(text=f"I think your bird is:\n\n{bird} \U0001F426")
         await message.answer_photo(image_return)
+        kb = [
+            [
+            types.KeyboardButton(text="Yes!")
+            ],
+        ]
+        keyboard = types.ReplyKeyboardMarkup(
+            keyboard=kb,
+            resize_keyboard=True,
+            one_time_keyboard=True
+        )
+        await message.answer("Want to try again?", reply_markup=keyboard)
+        buttons_answer(message)
     else:
         await message.reply(text="I am not sure... Can you repeat, please?")
 
