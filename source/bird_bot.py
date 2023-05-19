@@ -4,9 +4,7 @@ from pathlib import Path
 import dotenv
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ParseMode
-from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import ParseMode
 from io import BytesIO
 from PIL import Image
@@ -25,6 +23,7 @@ from matplotlib import colors, pyplot as plt
 import seaborn as sns
 
 import requests
+
 import io
 
 
@@ -88,61 +87,83 @@ async def buttons_answer(message):
         await message.reply("Cool! I'm waiting for your image \U0001F51C")
     elif message.text == "Link \U0001F310":
         await message.reply("Link, of course! Make sure you copied the correct link \U0001F517")
-    
-
+    elif message.text.startswith("http"):
+        try:
+            response = requests.get(message.text).content
+            image = Image.open(io.BytesIO(response)).convert("RGB")
+            await message.reply("Got it! Starting downloading and processing your bird image \U0001F4E0")
+            bird, image_return = predict_image(model_resnet, image)
+            await message.reply(f"I think your bird is:\n\n{bird} \U0001F425")
+            await message.answer_photo(image_return)
+        except:
+            await message.reply(text=f"Your link is invalid \U0001F4DB")
+            
+            
 @dp.message_handler(content_types=[types.ContentType.PHOTO])
 async def echo_image(message: types.Message):
     if message.photo:
         photo_path = BytesIO()
         photo = await message.photo[-1].download(photo_path)
     
-        photo = Image.open(photo)
+        photo = Image.open(photo).convert("RGB")
 
         # Reply with the photo and caption
         await message.answer(
-            text="Got it! I recieved your image and started to find keys in my Birds photoalbom"
+            text="Got it! I have recieved your image and started to find keys in my Birds photo album \U0001F4DA"
         )
         # Perform bird prediction
-        # bird = predict(img_path=str(photo_path)"
-        # сюда вкрутить предсказание
+        bird, image_return = predict_image(model_resnet, photo)
 
         # Reply with the bird prediction
-        await message.reply(text=f"I think your bird is: {bird}")
-
-        # # Remove the saved photo
-        photo_path.unlink()
+        await message.reply(text=f"I think your bird is:\n\n{bird} \U0001F426")
+        await message.answer_photo(image_return)
     else:
         await message.reply(text="I am not sure... Can you repeat, please?")
+
+
+def predict_image(model, image, device=DEVICE):
+    model = model.to(device)
+    transform = transforms.Compose([
+                transforms.Resize(size=(RESCALE_SIZE,RESCALE_SIZE)),
+                transforms.CenterCrop(size=224),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+    
+    image_trans = transform(image).unsqueeze(0)
+    
+    with torch.no_grad():
+        inputs = image_trans.to(device)
+        model.eval()
+        logit = model(inputs).cpu()
+        probs = torch.nn.functional.softmax(logit, dim=-1).numpy()
         
+    max_prob = probs.max() * 100
+    y_pred_argmax = np.argmax(probs, -1)
+    pred_class = label_encoder.classes_[y_pred_argmax]
+    if max_prob > 60:
+        y_pred_argmax = np.argmax(probs, -1)
+        pred_class = label_encoder.classes_[y_pred_argmax]
+        predicted_text = "{}: {:.0f}%".format(pred_class[0], max_prob)
+        image_title = predicted_text
+    else:
+        idx = np.argsort(probs[-1])[-3:][::-1]
+        y_preds = [probs[-1][i] for i in idx]
+        predicted_text = []
+        for i, y_pred in zip(idx, y_preds):
+            preds_class = label_encoder.classes_[i]
+            predicted_text.append("{}: {:.0f}%".format(preds_class, y_pred * 100))
+        image_title = predicted_text[0]
+        predicted_text = "\n".join(predicted_text)
+    
+    fig, ax = plt.subplots(figsize=(10,10), dpi=300)
+    ax.imshow(image)
+    ax.set_title(image_title, fontsize=14, fontweight="bold")
+    ax.set_axis_off()
 
-# может пригодиться
-# class Links(StatesGroup):
-#     get = State()
-    
-    
-# @dp.message_handler(commands=["link"])
-# async def collect_link_start(message: Message, state: FSMContext):
-#     await message.reply("Send me links.\nTo finish, type or click /done")
-#     await Links.get.set()
-#     # You can use your own saving logic instead, this is just an example
-#     await state.update_data(links=[])
-    
-    
-# # You can set more advanced filter for links, `text_startswith` is just an example
-# @dp.message_handler(text_startswith=["http" or "https"], state=Links.get)
-# async def collect_links(message: Message, state: FSMContext):
-#     # You can use your own saving logic instead, this is just an example
-#     data = await state.get_data()
-#     links = data["links"]
-#     links.append(message.text)
-#     await state.update_data(links=links)
-
-#     await message.reply("Got it! Starting downloading and processing your bird image.")
-
-# # This handler is a fallback in case user didn't provide valid link
-# @dp.message_handler(state=Links.get)
-# async def invalid_link(message: Message):
-#     await message.reply("This doesn't look like a valid link!")
+    buffer = io.BytesIO()
+    fig.savefig(buffer, format='PNG')
+    return predicted_text, buffer.getvalue()
 
 
 if __name__ == "__main__":
