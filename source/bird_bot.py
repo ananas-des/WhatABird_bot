@@ -1,62 +1,66 @@
 import logging
 import os
-from pathlib import Path
 import dotenv
+from pathlib import Path
+import requests
+
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ParseMode
 from aiogram.dispatcher.filters import Text
 from aiogram.types import ParseMode
-from io import BytesIO
-from PIL import Image
 
+import io
+from PIL import Image
+import pickle
 
 import torch
 from torchvision import models
 import torch.nn as nn
 from torchvision import transforms
 
-
-import pickle
 import numpy as np
-
 from matplotlib import colors, pyplot as plt
 import seaborn as sns
 
-import requests
 
-import io
-
-
+# loading bot token from .env
 dotenv_file = Path(".env")
 if os.path.isfile(dotenv_file):
     dotenv.load_dotenv(dotenv_file)
 
+# loading bot token into variable
 API_TOKEN = os.environ["BOT_TOKEN"]
 
+# for logging program
 logging.basicConfig(level=logging.INFO)
+_logger = logging.getLogger(__name__)
 
+# creating bot and dispatcher
 bot = Bot(token=API_TOKEN, parse_mode="MarkdownV2")
 dp = Dispatcher(bot)
 
-_logger = logging.getLogger(__name__)
-
-
+# setting up classifiaction model
+# loading pretrained ResNet50 model from torch
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 RESCALE_SIZE = 232
-
 model_resnet = models.resnet50(weights=None).to(DEVICE)
 for i, child in enumerate(model_resnet.children()):
     if i not in [9]:
         for param in child.parameters():
             param.requires_grad = False
 
+# loading updated model weights and label encoder data
 model_resnet.fc = nn.Sequential(nn.Linear(2048, 525))
 model_resnet.load_state_dict(torch.load("model/model_weights_50_best.pth", map_location=torch.device(DEVICE)))
 label_encoder = pickle.load(open("model/label_encoder.pkl", 'rb'))
 
 
+# functions for commutication with telegram bot
 @dp.message_handler(commands=["start", "help"])
 async def send_welcome(message: types.Message):
+    '''A function for greeting user'''
+    
+    
     await message.reply(
         F"Alloha, {message.from_user.first_name}! I'm *WhatBirdBot* \U0001F424 I know 525 species of birds. Let's look at your images! "
         "Send me picture with a bird or a link. And I will try to find out What A Bird is in your picture. "
@@ -78,6 +82,11 @@ async def send_welcome(message: types.Message):
 
 @dp.message_handler(content_types=['text'])
 async def buttons_answer(message):
+    '''A function for creating reply buttons with image data type options (image format or link).
+    If user's input is link, the function downloads it in buffer, makes prediction sends the image with predicted
+    species back to user'''
+    
+    
     if message.text == "Yes!":
         kb = [
             [
@@ -138,17 +147,21 @@ async def buttons_answer(message):
             
 @dp.message_handler(content_types=[types.ContentType.PHOTO])
 async def echo_image(message: types.Message):
-    if message.photo:
-        photo_path = BytesIO()
-        photo = await message.photo[-1].download(photo_path)
+    '''A function for processing user's image, making prediction and sending the image with predicted
+    species back to user'''
     
+    
+    if message.photo:
+        photo_path = io.BytesIO()
+        photo = await message.photo[-1].download(photo_path)
         photo = Image.open(photo).convert("RGB")
 
         # Reply with the photo and caption
         await message.answer(
             text="Got it\! I have recieved your image and started to find keys in my Birds photo album \U0001F4DA"
         )
-        # Perform bird prediction
+        
+        # Perform bird species prediction
         bird, image_return = predict_image(model_resnet, photo)
 
         # Reply with the bird prediction
@@ -171,6 +184,21 @@ async def echo_image(message: types.Message):
 
 
 def predict_image(model, image, device=DEVICE):
+    '''The function predict_image() preprocesses image, predicts its class, creates updated image
+    with the most probable bird species and text message with prediction and its accuracy. 
+    In case of accuracy <60%, the text message contains the top three bird species by its prediction accuracy.
+    
+    Parameters:
+        model: classification model
+        image: user's bird image
+        device: CUDA if it is available
+    
+    Retuns:
+        predicted_text (str): text message for user
+        buffer.getvalue(): updated image from buffer for user
+    '''
+    
+    
     model = model.to(device)
     transform = transforms.Compose([
                 transforms.Resize(size=(RESCALE_SIZE,RESCALE_SIZE)),
@@ -178,7 +206,6 @@ def predict_image(model, image, device=DEVICE):
                 transforms.ToTensor(),
                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
-    
     image_trans = transform(image).unsqueeze(0)
     
     with torch.no_grad():
