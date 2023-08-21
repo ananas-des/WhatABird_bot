@@ -14,7 +14,8 @@ Repository with Python code for Birds species image classification and for Teleg
 **Note**: Make sure you *store the token securely*. Anyone with your token access can easily manipulate your bot.
 
 2. Cloning repository and setting up an environment
-- clone this repository using the following command
+- clone this repository using an **SSH** key
 ```
-git clone
+git clone git@github.com:AnasZol/WhatABird_bot.git
 ```
+
