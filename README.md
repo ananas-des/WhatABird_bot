@@ -74,3 +74,5 @@ $ python bird_bot.py
 ## Using Telegram bot for Birds species image classification
 
 Telegram bot accepts both birds images and their links. Here the instruction for bot usage.
+
+![bot_instructions](./bot_instructions.pdf)
