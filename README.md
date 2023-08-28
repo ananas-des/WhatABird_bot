@@ -1,9 +1,19 @@
 # WhatABird_bot 🐤
 
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black) ![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white) ![Jupyter](https://img.shields.io/badge/Made%20with-Jupyter-orange?style=for-the-badge&logo=Jupyter)
+
 Repository with Python code for Birds species image classification and for Telegram Bot. Also it contains [Jupyter Notebook](./source/birds_model.ipynb) with [ResNet-50](https://iq.opengenus.org/resnet50-architecture/) model training and [presentation](./What_A_Bird_Bot.pdf) with some descriptions. 
 For model training, the data set of 525 bird species from [kaggle](https://www.kaggle.com/datasets/gpiosenka/100-bird-species?resource=download) was used. It contains three sunsets: *84635* training images, *2625* validation images, and *2625* test images (5 images per species for both subsets). 
 
 Follow the guidelines to set up and launch your Telegram Bot.
+
+## System
+
+- <img src="https://github.com/simple-icons/simple-icons/raw/develop/icons/ubuntu.svg" style="height: 25px; width:25px;"/> **Ubuntu** v20.04.6 LTS
+- <img src="https://github.com/simple-icons/simple-icons/raw/develop/icons/python.svg" style="height: 25px; width:25px;"/> **Python** v3.9.13
+- <img src="https://raw.githubusercontent.com/simple-icons/simple-icons/c44c0a776bfab5924f0ecef7e595be8d8afda2be/icons/pytorch.svg" style="height: 25px; width:25px;"/> **PyTorch** v2.0.1
+- <img src="https://raw.githubusercontent.com/simple-icons/simple-icons/c44c0a776bfab5924f0ecef7e595be8d8afda2be/icons/nvidia.svg" style="height: 25px; width:25px;"/> **CUDA** v11.8
+- <img src="https://github.com/simple-icons/simple-icons/raw/develop/icons/gnubash.svg" style="height: 25px; width:25px;"/> **bash**
 
 ## Creating a Telegram Bot
 
