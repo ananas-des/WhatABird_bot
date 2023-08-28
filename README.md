@@ -71,8 +71,8 @@ $ source .env
 $ python bird_bot.py
 ```
 
-## Using Telegram bot for Birds species image classification
+## Telegram bot usage for Birds species image classification
 
-Telegram bot accepts both birds images and their links. Here the instruction for bot usage.
+Telegram bot accepts both birds images and their links. ![Here](./bot_instructions.pdf) the instruction for bot usage. Generally, all you need to copy bird image or link, paste it into message box, and send to bot. The bot will *respond a text message* with the predicted bird species and prediction accuracy. In the case when accuracy is below 60%, the bot will send the top 3 best predictions. The bot will also *generate an image* based on the original one, adding a title with a bird species according to the best prediction.
 
-![bot_instructions](./bot_instructions.pdf)
+Try it yourself!
