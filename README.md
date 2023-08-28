@@ -1,6 +1,9 @@
 # WhatABird_bot 🐤
 
-Repository with Python code for Birds species image classification and for Telegram Bot. Also it contains [Jupyter Notebook](./source/birds_model.ipynb) with ResNet-50 model training and [presentation](./What_A_Bird_Bot.pdf) with some descriptions. Follow the guidelines to set up and launch your Telegram Bot.
+Repository with Python code for Birds species image classification and for Telegram Bot. Also it contains [Jupyter Notebook](./source/birds_model.ipynb) with [ResNet-50](https://iq.opengenus.org/resnet50-architecture/) model training and [presentation](./What_A_Bird_Bot.pdf) with some descriptions. 
+For model training, the data set of 525 bird species from [kaggle](https://www.kaggle.com/datasets/gpiosenka/100-bird-species?resource=download) was used. It contains three sunsets: *84635* training images, *2625* validation images, and *2625* test images (5 images per species for both subsets). 
+
+Follow the guidelines to set up and launch your Telegram Bot.
 
 ## Creating a Telegram Bot
 
