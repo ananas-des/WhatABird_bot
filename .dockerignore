@@ -1,0 +1,7 @@
+*.md
+*.pdf
+*.log
+.git
+**/.env
+__pycach__
+.ipynb_checkpoints/
