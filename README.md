@@ -30,7 +30,7 @@ Follow the guidelines to set up and launch your Telegram Bot.
 - clone this repository using an **SSH** key
 
 ```
-$ git clone git@github.com:AnasZol/WhatABird_bot.git
+$ git clone git@github.com:ananas-des/WhatABird_bot.git
 ```
 
 - navigate to local repository
