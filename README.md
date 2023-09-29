@@ -40,7 +40,7 @@ $ git clone git@github.com:ananas-des/WhatABird_bot.git
 $ cd WhatABird_bot/
 ```
 
-Further, you have to options for running Telegram bot: run it in `conda` **virtual environment**, or starting it in **Docker container**. For instructions about building image and starting container, proceed to [Start a Telegram bot in container](/WhatABird_bot/README/Start-a-Telegram-bot-in-container) section
+Further, you have to options for running Telegram bot: run it in `conda` **virtual environment**, or starting it in **Docker container**. For instructions about building image and starting container, proceed to [Start a bot in container](#start-a-bot-in-container) section
 
 - create and activate virtual environment with Python v3.9.13 using `conda`
 
@@ -84,7 +84,7 @@ $ source .env
 $ python bird_bot.py
 ```
 
-## Start a Telegram bot in container
+## Start a bot in container
 
 Make sure you have docker installed. If necessary, install docker following the instructions [here](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04).
 
